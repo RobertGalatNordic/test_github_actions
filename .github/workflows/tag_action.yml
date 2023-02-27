@@ -8,18 +8,18 @@ on:
 jobs:
   build:
     name: Add documentaiton as asset
-      runs-on: ubuntu-latest
-
-      steps:
-        - name: Build
-          uses: actions/checkout@v3
-          run: echo "hello" > build && zip -r documentation.zip build
-        - name: Upload binaries to release
-          uses: svenstaro/upload-release-action@v2
-          with:
-            repo_token: ${{ secrets.GITHUB_TOKEN }}
-            file: documentation.zip
-            asset_name: documentation.zip
-            tag: ${{ github.ref }}
-            overwrite: true
-            body: "Documentation in HTML, unzip and open `html/index.html`"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        uses: actions/checkout@v3
+        run: echo "hello" > build && zip -r documentation.zip build
+        
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: documentation.zip
+          asset_name: documentation.zip
+          tag: ${{ github.ref }}
+          overwrite: true
+          body: "Documentation in HTML, unzip and open `html/index.html`"
