@@ -23,4 +23,4 @@ jobs:
           asset_name: mything
           tag: ${{ github.ref }}
           overwrite: true
-          body: "This is my release text"
+          body: "This is my release text for version ${{github.ref_name}}"
