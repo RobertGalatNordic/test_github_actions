@@ -16,5 +16,5 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: documentation_${{ github.ref }}
+          name: documentation_${{github.ref_name}}
           path: documentation.zip
