@@ -7,6 +7,7 @@ on:
 
 jobs:
   build:
+    permissions: write-all
     name: Add documentaiton as asset
     runs-on: ubuntu-latest
     steps:
