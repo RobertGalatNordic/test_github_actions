@@ -33,7 +33,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: build_doc
-        run: mkdir html; echo "hello world ${{github.ref_name}}" > html/index.html
+        run: mkdir html; echo "hello world ${{github.ref_name}} <IMG SRC="https://media.tenor.com/_BiwWBWhYucAAAAC/what-huh.gif">" > html/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
