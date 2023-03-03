@@ -33,12 +33,12 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: build_doc
-        run: echo "hello world ${{github.ref_name}}" > index.html
+        run: mkdir html; echo "hello world ${{github.ref_name}}" > html/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: 'index.html'
+          path: 'html'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
