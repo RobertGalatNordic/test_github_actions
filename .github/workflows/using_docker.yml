@@ -20,7 +20,7 @@ jobs:
         run: ln -s /home/runner/siewalk  /workdir/sidewalk
 
       - name: Reconfigure west
-        run: west config manifest.path=sidewalk; west update -n -o=--depth=1
+        run: cd /workdir; west config manifest.path=sidewalk; west update -n -o=--depth=1
 
       - name: Build sample
         run: west build /workdir/sidewalk/samples/sid_dut -b nrf52840dk_nrf52840
