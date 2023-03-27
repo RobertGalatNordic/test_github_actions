@@ -1,4 +1,4 @@
-name: Deploy static content to Pages
+name: Test using docker
 
 on:
   # Runs on pushes targeting the default branch
@@ -7,7 +7,7 @@ on:
 
 jobs:
 # Single deploy job since we're just deploying
-  deploy:
+  Build_zephyr_sample:
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          path: ../my_project
+          path: /workdir/my_project
 
       - name: Build sample
         run: west build ../zephyr/samples/basic/blinky -b nrf52840dk_nrf52840
