@@ -11,11 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
+      volumes:
+        - /workdir/my_project:.
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          path: /workdir/my_project
+
 
       - name: Build sample
         run: west build ../zephyr/samples/basic/blinky -b nrf52840dk_nrf52840
