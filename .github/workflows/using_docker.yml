@@ -14,8 +14,8 @@ jobs:
 
     steps:
       - name: install gcc-multilib
-        run: apt install gcc-multilib
-        
+        run: apt install -y gcc-multilib
+
       - name: Pull sidewalk
         run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
 
