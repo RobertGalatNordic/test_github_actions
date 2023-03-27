@@ -13,6 +13,9 @@ jobs:
       image: nordicplayground/nrfconnect-sdk:main
 
     steps:
+      - name: install gcc-multilib
+        run: apt install gcc-multilib
+        
       - name: Pull sidewalk
         run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
 
@@ -26,11 +29,11 @@ jobs:
         run: west build /workdir/sidewalk/samples/sid_dut -b nrf52840dk_nrf52840
     
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk --build-only --no-clean --show-footprint --footprint-from-buildlog
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk --build-only --no-clean --show-footprint --footprint-from-buildlog -vvv
       
       - name: archive artifacts
         run: zip ${{ github.sha }}-twister-output.zip twister-output
 
       - name: twister run unit tests
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests/unit_tests --no-clean
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests/unit_tests --no-clean -vvv
 
