@@ -17,7 +17,7 @@ jobs:
         run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
 
       - name: link project
-        run: ln -s /home/runner/siewalk  /workdir/sidewalk
+        run: cp -r /home/runner/siewalk  /workdir/sidewalk
 
       - name: Reconfigure west
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
