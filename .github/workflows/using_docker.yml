@@ -1,0 +1,26 @@
+name: Deploy static content to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+
+jobs:
+# Single deploy job since we're just deploying
+  deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: nordicplayground/nrfconnect-sdk:main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: ../my_project
+
+      - name: Build sample
+        run: west build ../zephyr/samples/basic/blinky -b nrf52840dk_nrf52840
+
+      - name: list dirs
+        run: ls -lah /workdir
+
+
