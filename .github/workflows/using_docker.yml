@@ -26,11 +26,11 @@ jobs:
         run: west build /workdir/sidewalk/samples/sid_dut -b nrf52840dk_nrf52840
     
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister -T /workdir/zephyr/sidewalk --build-only --no-clean --show-footprint --footprint-from-buildlog
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk --build-only --no-clean --show-footprint --footprint-from-buildlog
       
       - name: archive artifacts
         run: zip ${{ github.sha }}-twister-output.zip twister-output
 
       - name: twister run unit tests
-        run: /workdir/zephyr/scripts/twister -T /workdir/zephyr/sidewalk/tests/unit_tests --no-clean
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests/unit_tests --no-clean
 
