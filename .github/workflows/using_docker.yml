@@ -7,7 +7,7 @@ on:
 
 jobs:
 # Single deploy job since we're just deploying
-  Test_build_samples:
+  Build_samples:
     strategy:
       matrix:
         samples_to_test:
@@ -40,22 +40,15 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ github.sha }}-${{ matrix.samples_to_test }}
+          name: ${{ github.sha }}-sample-${{ matrix.samples_to_test }}
           path: |
-            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/zephyr.elf
-            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/zephyr.hex
-            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/app_update.bin
-            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/.config
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.elf
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.hex
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/app_update.bin
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/.config
+            twister-out/twister.json
 
-  Run_Tests: 
-    strategy:
-      matrix:
-        samples_to_test:
-          - functional
-          - manual
-          - unit_tests
-          - validation
-
+  Run_Unit_Tests: 
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
@@ -75,4 +68,44 @@ jobs:
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
 
       - name: twister build and run x86 tests 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests/${{ matrix.samples_to_test }}  --no-clean -vvv
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests/unit-tests --no-clean -vvv
+
+  Build_manual_tests:
+    strategy:
+      matrix:
+        samples_to_test:
+          - functional
+          - manual
+          - validation
+    runs-on: ubuntu-latest
+    container:
+      image: nordicplayground/nrfconnect-sdk:main
+      options: --cpus 2
+
+    steps:
+      - name: install gcc-multilib
+        run: apt install -y gcc-multilib
+
+      - name: Pull sidewalk
+        run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
+
+      - name: link project
+        run: cp -r /home/runner/siewalk  /workdir/sidewalk
+
+      - name: Reconfigure west
+        run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
+
+      - name: twister build and run x86 tests 
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests/${{ matrix.samples_to_test }} --no-clean -vvv
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.sha }}-tests-${{ matrix.samples_to_test }} 
+          path: |
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.elf
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.hex
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/app_update.bin
+            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/.config
+            twister-out/twister.json
+      
