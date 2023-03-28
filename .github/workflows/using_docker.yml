@@ -8,28 +8,10 @@ on:
 jobs:
 # Single deploy job since we're just deploying
   Build_zephyr_sample:
-    strategy:
-      matrix:
-        samples_build_list: 
-          - sample.sidewalk.demo.ble
-          - sample.sidewalk.demo.fsk
-          - sample.sidewalk.demo.lora
-          - sample.sidewalk.template.fsk
-          - sample.sidewalk.template.fsk.cli
-          - sample.sidewalk.template.fsk.release
-          - sample.sidewalk.template.lora
-          - sample.sidewalk.template.lora.cli
-          - sample.sidewalk.template.lora.dfu_usb
-          - sample.sidewalk.template.lora.release
-          - sample.sidewalk.template_ble
-          - sample.sidewalk.template_ble.cli
-          - sample.sidewalk.template_ble.dfu_usb
-          - sample.sidewalk.template_ble.release
-          - sidewalk.sid_dut
-
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
+      options: --cpus 2
 
     steps:
       - name: install gcc-multilib
@@ -45,8 +27,8 @@ jobs:
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
     
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/samples --build-only --no-clean --show-footprint --footprint-from-buildlog -vvv -s /workdir/sidewalk/samples/${{ matrix.samples_build_list }}
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/samples --no-clean --show-footprint --footprint-from-buildlog -vvv
 
-      - name: twister run unit tests
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests/unit_tests --no-clean -vvv
+      - name: twister run tests
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests --no-clean -vvv
 
