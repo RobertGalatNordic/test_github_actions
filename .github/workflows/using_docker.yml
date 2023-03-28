@@ -7,7 +7,26 @@ on:
 
 jobs:
 # Single deploy job since we're just deploying
-  Build_zephyr_sample:
+  Test_build_samples:
+    strategy:
+      matrix:
+        samples_to_test:
+          - sidewalk/samples/template_subghz/sample.sidewalk.template.lora
+          - sidewalk/samples/template_subghz/sample.sidewalk.template.lora.cli
+          - sidewalk/samples/template_subghz/sample.sidewalk.template.lora.release
+          - sidewalk/samples/template_subghz/sample.sidewalk.template.lora.dfu_usb
+          - sidewalk/samples/template_subghz/sample.sidewalk.template.fsk
+          - sidewalk/samples/template_subghz/sample.sidewalk.template.fsk.cli
+          - sidewalk/samples/template_subghz/sample.sidewalk.template.fsk.release
+          - sidewalk/samples/template_ble/sample.sidewalk.template_ble
+          - sidewalk/samples/template_ble/sample.sidewalk.template_ble.release
+          - sidewalk/samples/template_ble/sample.sidewalk.template_ble.cli
+          - sidewalk/samples/template_ble/sample.sidewalk.template_ble.dfu_usb
+          - sidewalk/samples/sensor_monitoring/sample.sidewalk.demo.ble
+          - sidewalk/samples/sensor_monitoring/sample.sidewalk.demo.fsk
+          - sidewalk/samples/sensor_monitoring/sample.sidewalk.demo.lora
+          - sidewalk/samples/sid_dut/sidewalk.sid_dut
+
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
@@ -25,10 +44,72 @@ jobs:
 
       - name: Reconfigure west
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
-    
+
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/samples --no-clean --show-footprint --footprint-from-buildlog -vvv
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/samples --no-clean --show-footprint --footprint-from-buildlog -vvv --test ${{ matrix.samples_to_test }} 
 
-      - name: twister run tests
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests --no-clean -vvv
+  Run_Tests:
+    strategy:
+      matrix:
+        Test_configs:
+          - sidewalk/tests/manual/power/sidewalk.ble.test.power
+          - sidewalk/tests/manual/power/sidewalk.lora.test.power
+          - sidewalk/tests/manual/power/sidewalk.fsk.test.power
+          - sidewalk/tests/manual/log/sidewalk.test.log
+          - sidewalk/tests/manual/ble/sidewalk.test.ble
+          - sidewalk/tests/manual/power_ble_only/sidewalk.ble_only.test.power
+          - sidewalk/tests/validation/storage_kv/sidewalk.sid_validation.pal_storage_kv
+          - sidewalk/tests/validation/crypto/sidewalk.sid_validation.pal_crypto
+          - sidewalk/tests/validation/timer/sidewalk.sid_validation.pal_timer
+          - sidewalk/tests/unit_tests/sid_pal_gpio_utils/sidewalk.unit_tests.gpio_utils
+          - sidewalk/tests/unit_tests/pal_assert/sidewalk.unit_tests.assert
+          - sidewalk/tests/unit_tests/pal_mfg_storage/sidewalk.unit_tests.mfg_storage
+          - sidewalk/tests/unit_tests/sid_ble_service/sidewalk.unit_tests.sid_ble_service
+          - sidewalk/tests/unit_tests/state_notifier/sidewalk.unit_tests.state_notifier
+          - sidewalk/tests/unit_tests/sid_pal_gpio_irq/sidewalk.unit_tests.gpio_irq
+          - sidewalk/tests/unit_tests/pal_uptime/sidewalk.unit_tests.uptime
+          - sidewalk/tests/unit_tests/sid_ble_advert/sidewalk.unit_tests.ble_advertising
+          - sidewalk/tests/unit_tests/sid_pal_gpio/sidewalk.unit_tests.gpio
+          - sidewalk/tests/unit_tests/pal_storage_kv/sidewalk.unit_tests.storage_kv
+          - sidewalk/tests/unit_tests/pal_crypto/sidewalk.unit_tests.crypto
+          - sidewalk/tests/unit_tests/sid_pal_gpio_irq_handler/sidewalk.unit_tests.gpio_irq_handler
+          - sidewalk/tests/unit_tests/pal_log/sidewalk.unit_tests.log
+          - sidewalk/tests/unit_tests/pal_ble_adapter/sidewalk.unit_tests.ble_adapter
+          - sidewalk/tests/unit_tests/sid_ble_adapter_callbacks/sidewalk.unit_tests.ble_adapter_callbacks
+          - sidewalk/tests/unit_tests/pal_critical_region/sidewalk.unit_tests.critical_region
+          - sidewalk/tests/unit_tests/pal_temperature/sidewalk.unit_tests.temperature
+          - sidewalk/tests/unit_tests/pal_timer/sidewalk.unit_tests.timer
+          - sidewalk/tests/unit_tests/sid_ble_connection/sidewalk.unit_tests.ble_connection
+          - sidewalk/tests/unit_tests/sid_ace_alloc/sidewalk.unit_tests.ace.alloc
+          - sidewalk/tests/unit_tests/sid_dut_shell/sidewalk.unit_tests.sid_dut_shell
+          - sidewalk/tests/unit_tests/pal_sw_interrupts/unity.sidewalk.unit_tests.interrupts
+          - sidewalk/tests/functional/spi_bus/sample.test.spi_bus
+          - sidewalk/tests/functional/interrupts/unity.sidewalk.functional.interrupts
+          - sidewalk/tests/functional/time/sidewalk.functional.time
+          - sidewalk/tests/functional/storage/sidewalk.functional.storage
+          - sidewalk/tests/functional/crypto/sidewalk.functional.crypto
+          - sidewalk/tests/functional/mfg_storage/sidewalk.functional.mfg_storage
+          - sidewalk/tests/functional/temperature/sample.test.temperature
+          - sidewalk/tests/functional/critical_region/sidewalk.functional.critical_region
+          - sidewalk/tests/functional/pal_delay/sidewalk.unit_tests.delay
 
+    runs-on: ubuntu-latest
+    container:
+      image: nordicplayground/nrfconnect-sdk:main
+      options: --cpus 2
+
+    steps:
+      - name: install gcc-multilib
+        run: apt install -y gcc-multilib
+
+      - name: Pull sidewalk
+        run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
+
+      - name: link project
+        run: cp -r /home/runner/siewalk  /workdir/sidewalk
+
+      - name: Reconfigure west
+        run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
+
+      - name: twister build and run x86 tests 
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests --no-clean -vvv --test ${{ matrix.Test_configs }} 
