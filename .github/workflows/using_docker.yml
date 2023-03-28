@@ -8,6 +8,25 @@ on:
 jobs:
 # Single deploy job since we're just deploying
   Build_zephyr_sample:
+    strategy:
+      matrix:
+        samples_build_list: 
+          - sample.sidewalk.demo.ble
+          - sample.sidewalk.demo.fsk
+          - sample.sidewalk.demo.lora
+          - sample.sidewalk.template.fsk
+          - sample.sidewalk.template.fsk.cli
+          - sample.sidewalk.template.fsk.release
+          - sample.sidewalk.template.lora
+          - sample.sidewalk.template.lora.cli
+          - sample.sidewalk.template.lora.dfu_usb
+          - sample.sidewalk.template.lora.release
+          - sample.sidewalk.template_ble
+          - sample.sidewalk.template_ble.cli
+          - sample.sidewalk.template_ble.dfu_usb
+          - sample.sidewalk.template_ble.release
+          - sidewalk.sid_dut
+
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
@@ -24,15 +43,9 @@ jobs:
 
       - name: Reconfigure west
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
-
-      - name: Build sample
-        run: west build /workdir/sidewalk/samples/sid_dut -b nrf52840dk_nrf52840
     
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk --build-only --no-clean --show-footprint --footprint-from-buildlog -vvv
-      
-      - name: archive artifacts
-        run: zip ${{ github.sha }}-twister-output.zip twister-output
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/samples --build-only --no-clean --show-footprint --footprint-from-buildlog -vvv -s /workdir/sidewalk/samples/${{samples_build_list}}
 
       - name: twister run unit tests
         run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests/unit_tests --no-clean -vvv
