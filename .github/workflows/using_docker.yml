@@ -11,10 +11,10 @@ jobs:
     strategy:
       matrix:
         samples_to_test:
-          - sidewalk/samples/template_subghz
-          - sidewalk/samples/template_ble
-          - sidewalk/samples/sensor_monitoring
-          - sidewalk/samples/sid_dut
+          - samples/template_subghz
+          - samples/template_ble
+          - samples/sensor_monitoring
+          - samples/sid_dut
 
     runs-on: ubuntu-latest
     container:
@@ -35,16 +35,22 @@ jobs:
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
 
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/${{ matrix.samples_to_test }} --no-clean --show-footprint --footprint-from-buildlog -vvv
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/${{ matrix.samples_to_test }} --no-clean --show-footprint --footprint-from-buildlog -vvv --build-only
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.sha }}-${{ matrix.samples_to_test }}
+          path: twister-out
 
   Run_Tests: 
     strategy:
       matrix:
         samples_to_test:
-          - sidewalk/tests/functional
-          - sidewalk/tests/manual
-          - sidewalk/tests/unit_tests
-          - sidewalk/tests/validation
+          - tests/functional
+          - tests/manual
+          - tests/unit_tests
+          - tests/validation
 
     runs-on: ubuntu-latest
     container:
@@ -65,4 +71,4 @@ jobs:
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
 
       - name: twister build and run x86 tests 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/${{ matrix.samples_to_test }}  --no-clean -vvv
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/${{ matrix.samples_to_test }}  --no-clean -vvv
