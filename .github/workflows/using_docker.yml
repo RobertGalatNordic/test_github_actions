@@ -45,7 +45,7 @@ jobs:
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
     
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/samples --build-only --no-clean --show-footprint --footprint-from-buildlog -vvv -s /workdir/sidewalk/samples/${{samples_build_list}}
+        run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/samples --build-only --no-clean --show-footprint --footprint-from-buildlog -vvv -s /workdir/sidewalk/samples/${{ matrix.samples_build_list }}
 
       - name: twister run unit tests
         run: /workdir/zephyr/scripts/twister -T /workdir/sidewalk/tests/unit_tests --no-clean -vvv
