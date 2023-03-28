@@ -68,7 +68,7 @@ jobs:
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
 
       - name: twister build and run x86 tests 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests/unit-tests --no-clean -vvv
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests/unit_tests --no-clean -vvv
 
   Build_manual_tests:
     strategy:
