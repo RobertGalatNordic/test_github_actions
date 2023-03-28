@@ -35,13 +35,17 @@ jobs:
         run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
 
       - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/samples${{ matrix.samples_to_test }} --no-clean --show-footprint --footprint-from-buildlog -vvv --build-only
+        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/samples/${{ matrix.samples_to_test }} --no-clean --show-footprint --footprint-from-buildlog -vvv --build-only
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ github.sha }}-${{ matrix.samples_to_test }}
-          path: twister-out
+          path: |
+            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/zephyr.elf
+            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/zephyr.hex
+            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/app_update.bin
+            twister-out/**/sidewalk/samples/**/.*sidewalk.*/zephyr/.config
 
   Run_Tests: 
     strategy:
