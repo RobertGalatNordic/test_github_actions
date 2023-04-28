@@ -1,111 +1,131 @@
-name: Test using docker
-
+name: Build Sidewalk samples and tests
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["master"]
+  pull_request:
 
 jobs:
-# Single deploy job since we're just deploying
   Build_samples:
     strategy:
       matrix:
-        samples_to_test:
-          - template_subghz
-          - template_ble
-          - sensor_monitoring
-          - sid_dut
+        subset: [1, 2, 3, 4, 5, 6]
+        platform: [nrf52840dk_nrf52840]
+    env:
+      MAX_SUBSETS: 6
 
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
       options: --cpus 2
 
-    steps:
-      - name: install gcc-multilib
-        run: apt install -y gcc-multilib
-
+    steps:          
       - name: Pull sidewalk
-        run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
-
-      - name: link project
-        run: cp -r /home/runner/siewalk  /workdir/sidewalk
+        run: git clone https://github.com/nrfconnect/sdk-sidewalk
 
       - name: Reconfigure west
-        run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
+        run: |
+          cp -r sdk-sidewalk /workdir/sidewalk
+          cd /workdir
+          west config manifest.path sidewalk
+          west update --narrow -o=--depth=1
 
-      - name: twister build samples 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/samples/${{ matrix.samples_to_test }} --no-clean --show-footprint --footprint-from-buildlog -vvv --build-only
+      - name: Twister build samples ${{ matrix.platform }}
+        run: /workdir/zephyr/scripts/twister --platform ${{ matrix.platform }} --testsuite-root /workdir/sidewalk/samples/ --no-clean --show-footprint --footprint-from-buildlog -vvv --build-only --subset ${{ matrix.subset }}/${{ env.MAX_SUBSETS }}
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: ${{ github.sha }}-sample-${{ matrix.samples_to_test }}
+          name: sample-${{ matrix.platform }}-${{ matrix.subset }}_of_${{ env.MAX_SUBSETS }}
           path: |
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.elf
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.hex
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/app_update.bin
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/.config
+            twister-out/**/zephyr/merged.hex
+            twister-out/**/zephyr/zephyr.elf
+            twister-out/**/zephyr/zephyr.hex
+            twister-out/**/zephyr/app_update.bin
+            twister-out/**/zephyr/dfu_application.zip
+            twister-out/**/zephyr/.config
+            twister-out/**/build.log
             twister-out/twister.json
 
-  Run_Unit_Tests: 
-    runs-on: ubuntu-latest
-    container:
-      image: nordicplayground/nrfconnect-sdk:main
-      options: --cpus 2
-
-    steps:
-      - name: install gcc-multilib
-        run: apt install -y gcc-multilib
-
-      - name: Pull sidewalk
-        run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
-
-      - name: link project
-        run: cp -r /home/runner/siewalk  /workdir/sidewalk
-
-      - name: Reconfigure west
-        run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
-
-      - name: twister build and run x86 tests 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests/unit_tests --no-clean -vvv
-
-  Build_manual_tests:
+  Build_tests_for_boards:
     strategy:
       matrix:
-        samples_to_test:
-          - functional
-          - manual
-          - validation
+        subset: [1, 2, 3]
+        platform: [nrf52840dk_nrf52840]
+    env:
+      MAX_SUBSETS: 3
+
     runs-on: ubuntu-latest
     container:
       image: nordicplayground/nrfconnect-sdk:main
       options: --cpus 2
 
     steps:
-      - name: install gcc-multilib
-        run: apt install -y gcc-multilib
-
       - name: Pull sidewalk
-        run: git clone https://github.com/nrfconnect/sdk-sidewalk /home/runner/siewalk
-
-      - name: link project
-        run: cp -r /home/runner/siewalk  /workdir/sidewalk
+        run: git clone https://github.com/nrfconnect/sdk-sidewalk
 
       - name: Reconfigure west
-        run: cd /workdir; west config manifest.path sidewalk; west update -n -o=--depth=1
+        run: |
+          cp -r sdk-sidewalk /workdir/sidewalk
+          cd /workdir
+          west config manifest.path sidewalk
+          west update --narrow -o=--depth=1
 
-      - name: twister build and run x86 tests 
-        run: /workdir/zephyr/scripts/twister --testsuite-root /workdir/sidewalk/tests/${{ matrix.samples_to_test }} --no-clean -vvv
+      - name: Build test artifacts for ${{ matrix.platform }}
+        run: /workdir/zephyr/scripts/twister --platform ${{ matrix.platform }} --testsuite-root /workdir/sidewalk/tests/ --no-clean -vvv --build-only --subset ${{ matrix.subset }}/${{ env.MAX_SUBSETS }}
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: ${{ github.sha }}-tests-${{ matrix.samples_to_test }} 
+          name: tests-${{ matrix.platform }}-${{ matrix.subset }}_of_${{ env.MAX_SUBSETS }}
           path: |
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.elf
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/zephyr.hex
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/app_update.bin
-            twister-out/**/sidewalk/samples/**/*sidewalk*/zephyr/.config
+            twister-out/**/testbinary
+            twister-out/**/zephyr/merged.hex
+            twister-out/**/zephyr/zephyr.elf
+            twister-out/**/zephyr/zephyr.hex
+            twister-out/**/zephyr/app_update.bin
+            twister-out/**/zephyr/dfu_application.zip
+            twister-out/**/zephyr/.config
+            twister-out/**/build.log
             twister-out/twister.json
+
+  Build_and_run_tests_for_x86:
+    strategy:
+      matrix:
+        subset: [1]
+    env:
+      MAX_SUBSETS: 1
+
+    runs-on: ubuntu-latest
+    container:
+      image: nordicplayground/nrfconnect-sdk:main
+      options: --cpus 2
+
+    steps:
+      - name: Pull sidewalk
+        run: git clone https://github.com/nrfconnect/sdk-sidewalk
+
+      - name: Reconfigure west
+        run: |
+          cp -r sdk-sidewalk /workdir/sidewalk
+          cd /workdir
+          west config manifest.path sidewalk
+          west update --narrow -o=--depth=1
+
+      - name: Build test artifacts for x86 and run
+        run: /workdir/zephyr/scripts/twister --platform native_posix --platform unit_testing --testsuite-root /workdir/sidewalk/tests/ --no-clean -vvv --subset ${{ matrix.subset }}/${{ env.MAX_SUBSETS }}
       
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: tests-x86-${{ matrix.subset }}_of_${{ env.MAX_SUBSETS }}
+          path: |
+            twister-out/**/testbinary
+            twister-out/**/zephyr/merged.hex
+            twister-out/**/zephyr/zephyr.elf
+            twister-out/**/zephyr/zephyr.hex
+            twister-out/**/zephyr/app_update.bin
+            twister-out/**/zephyr/dfu_application.zip
+            twister-out/**/zephyr/.config
+            twister-out/**/build.log
+            twister-out/twister.json
