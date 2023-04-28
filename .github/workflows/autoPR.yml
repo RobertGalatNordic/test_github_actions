@@ -2,8 +2,6 @@ name: NCS upmerge
 
 # The docker images are build at midnight, lets give it some time to build, and update in nordicplayground
 on:
-  schedule:
-    - cron: "0 13 * * *"
 
   workflow_dispatch:
 
@@ -39,9 +37,14 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
+          token: ${{ secrets.PAT_TOKEN }}
           path: sidewalk
           commit-message: "NRF: upmerge\n\nupdate nrf revision in west.yml"
+          title: "NRF upmerge"
+          body: "PR created automatically by GitHub actions to change revision of NRF in west.yml"
           delete-branch: true
           branch: nrf_upmerge
           branch-suffix: timestamp
+          signoff: true
+
     
