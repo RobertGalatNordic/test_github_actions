@@ -1,0 +1,46 @@
+name: NCS upmerge
+
+# The docker images are build at midnight, lets give it some time to build, and update in nordicplayground
+on:
+  workflow_dispatch:
+
+jobs:
+  Change_NRF_revision:
+    permissions:
+      contents: write
+      pull-requests: write
+
+    name: Create PR with NRF upmerge
+    runs-on: ubuntu-latest
+    env: 
+      CI_COMMIT_AUTHOR: Continuous Integration
+    steps:
+      - name: Checkout sidewalk
+        uses: actions/checkout@v3
+        with:
+          path: sidewalk
+          ref: main
+      
+      - name: Checkout nrf
+        uses: actions/checkout@v3
+        with:
+          repository: nrfconnect/sdk-nrf
+          path: nrf
+          ref: main
+
+      - name: Change nrf revision
+        run: |
+          cd nrf; 
+          nrf_hash="$(git rev-parse HEAD)"
+          cd ..;
+          echo "$nrf_hash" > sidewalk/test_file
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          path: sidewalk
+          commit-message: "NRF: upmerge\n\nupdate nrf revision in west.yml"
+          delete-branch: true
+          branch: nrf_upmerge
+          branch-suffix: timestamp
+    
